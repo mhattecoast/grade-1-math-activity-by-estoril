@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Star Adventures - Grade 1 Mathematics</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for playful icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Fredoka for child-friendly typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Fredoka', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-fast': 'pulse 1s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .star-glow {
+            text-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+        }
+        /* Custom smooth transitions */
+        .card-pop {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-pop:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="h-full bg-gradient-to-b from-sky-100 via-amber-50 to-emerald-100 text-slate-800 flex flex-col font-sans antialiased selection:bg-amber-300">
+    <!-- Navigation Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-amber-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer group" onclick="app.showDashboard()">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-200 group-hover:scale-105 transition transform">
+                    <i class="fa-solid fa-star text-2xl text-yellow-100 star-glow"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-amber-600 via-orange-500 to-pink-500 bg-clip-text text-transparent">Math Star </span>
+                    <p class="text-xs text-slate-500 font-semibold tracking-wide">Grade 1 Adventures</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="app.showDashboard()" class="hidden sm:flex items-center space-x-2 px-4 py-2 rounded-2xl bg-sky-50 text-sky-700 font-bold hover:bg-sky-100 transition border border-sky-200 shadow-sm">
+                    <i class="fa-solid fa-house-chimney"></i>
+                    <span>Home</span>
+                </button>
+                <div class="flex items-center space-x-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 px-4 py-2 rounded-2xl shadow-md border border-amber-300">
+                    <i class="fa-solid fa-star text-white star-glow text-lg"></i>
+                    <span id="global-stars" class="text-base font-bold">0 Stars</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <main id="app-container" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Dynamic content injected here -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/60 border-t border-amber-200/60 py-4 text-center text-xs text-slate-500 font-medium">
+        Fun Grade 1 Math Learning Activity • Built for GitHub Pages
+    </footer>
+
+    <!-- Reward / Celebration Modal -->
+    <div id="reward-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 text-center shadow-2xl border-4 border-amber-300 transform scale-90 transition-transform duration-300" id="reward-modal-content">
+            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-4xl animate-bounce">
+                🌟
+            </div>
+            <h3 id="reward-title" class="text-2xl font-bold text-slate-800 mb-2">Awesome Job!</h3>
+            <div id="reward-desc" class="text-slate-600 text-sm mb-6">You earned shiny stars and completed the challenge!</div>
+            <button onclick="app.closeRewardModal()" class="w-full py-3 bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-200 hover:from-emerald-500 hover:to-teal-600 transition text-lg">
+                Continue Playing!
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Audio / Celebration Helper (Visual FX) -->
+    <div id="fx-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+    <script>
+    const mathTopics = [
+        {
+            id: 'counting',
+            title: 'Counting & Numbers',
+            subtitle: 'Count friendly items up to 20!',
+            icon: 'fa-solid fa-calculator',
+            color: 'from-sky-400 to-blue-500',
+            badgeBg: 'bg-sky-100 text-sky-800 border-sky-300',
+            cardBg: 'bg-sky-50',
+            description: 'Count apples, stars, and cute animals to build your counting skills!',
+            questions: [
+                { type: 'count', target: 5, emoji: '🍎', prompt: 'How many juicy apples do you see?' },
+                { type: 'count', target: 8, emoji: '⭐', prompt: 'Count the glowing stars in the sky!' },
+                { type: 'count', target: 4, emoji: '🐱', prompt: 'How many playful kitties are here?' },
+                { type: 'compare', q: 'Which number is bigger: 7 or 4?', options: ['7', '4'], answer: 0 },
+                { type: 'sequence', q: 'What number comes next? 1, 2, 3, ?', options: ['4', '5', '0'], answer: 0 }
+            ]
+        },
+        {
+            id: 'addition',
+            title: 'Fun Addition',
+            subtitle: 'Put numbers together!',
+            icon: 'fa-solid fa-plus',
+            color: 'from-emerald-400 to-teal-500',
+            badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+            cardBg: 'bg-emerald-50',
+            description: 'Learn how to add objects together using visual blocks and simple equations.',
+            questions: [
+                { type: 'equation', a: 2, b: 3, emoji: '🎈', prompt: '2 + 3 = ?' },
+                { type: 'equation', a: 4, b: 1, emoji: '🐶', prompt: '4 + 1 = ?' },
+                { type: 'equation', a: 3, b: 3, emoji: '🍓', prompt: '3 + 3 = ?' },
+                { type: 'equation', a: 5, b: 2, emoji: '🐥', prompt: '5 + 2 = ?' },
+                { type: 'equation', a: 1, b: 6, emoji: '🎨', prompt: '1 + 6 = ?' }
+            ]
+        },
+        {
+            id: 'subtraction',
+            title: 'Simple Subtraction',
+            subtitle: 'Take away & find out!',
+            icon: 'fa-solid fa-minus',
+            color: 'from-pink-400 to-rose-500',
+            badgeBg: 'bg-pink-100 text-pink-800 border-pink-300',
+            cardBg: 'bg-pink-50',
+            description: 'Practice taking items away and find out how many are left over.',
+            questions: [
+                { type: 'sub_eq', a: 5, b: 2, emoji: '🍪', prompt: '5 - 2 = ?' },
+                { type: 'sub_eq', a: 4, b: 1, emoji: '🚗', prompt: '4 - 1 = ?' },
+                { type: 'sub_eq', a: 6, b: 3, emoji: '🍕', prompt: '6 - 3 = ?' },
+                { type: 'sub_eq', a: 7, b: 4, emoji: '🎈', prompt: '7 - 4 = ?' },
+                { type: 'sub_eq', a: 3, b: 0, emoji: '⚽', prompt: '3 - 0 = ?' }
+            ]
+        },
+        {
+            id: 'shapes',
+            title: 'Shapes & Patterns',
+            subtitle: 'Discover circles, squares & more!',
+            icon: 'fa-solid fa-shapes',
+            color: 'from-amber-400 to-orange-500',
+            badgeBg: 'bg-amber-100 text-amber-800 border-amber-300',
+            cardBg: 'bg-amber-50',
+            description: 'Recognize geometric shapes and complete fun pattern sequences!',
+            questions: [
+                { type: 'shape', q: 'Which shape has 3 equal sides and 3 corners?', options: ['Triangle 🔺', 'Square 🟦', 'Circle 🟡'], answer: 0 },
+                { type: 'shape', q: 'What shape looks like a wheel or a ball?', options: ['Rectangle 🟩', 'Circle 🟡', 'Square 🟦'], answer: 1 },
+                { type: 'shape', q: 'Complete the pattern: 🍎, 🍌, 🍎, 🍌, ?', options: ['🍎', '🍌', '🍇'], answer: 0 },
+                { type: 'shape', q: 'How many corners does a square have?', options: ['3', '4', '5'], answer: 1 },
+                { type: 'shape', q: 'Which shape has 4 equal straight sides?', options: ['Triangle 🔺', 'Square 🟦', 'Star ⭐'], answer: 1 }
+            ]
+        }
+    ];
+
+    class MathApp {
+        constructor() {
+            this.loadState();
+            this.currentView = 'dashboard';
+            this.activeTopicId = null;
+            this.currentQuestionIndex = 0;
+            this.score = 0;
+            this.init();
+        }
+
+        loadState() {
+            const saved = localStorage.getItem('math_star_progress_v1');
+            if (saved) {
+                try {
+                    this.progress = JSON.parse(saved);
+                } catch(e) {
+                    this.progress = {};
+                }
+            } else {
+                this.progress = {};
+            }
+        }
+
+        saveState() {
+            localStorage.setItem('math_star_progress_v1', JSON.stringify(this.progress));
+            this.updateTotalStarsDisplay();
+        }
+
+        getTotalStars() {
+            let total = 0;
+            for (let topicId in this.progress) {
+                total += (this.progress[topicId]?.stars || 0);
+            }
+            return total;
+        }
+
+        updateTotalStarsDisplay() {
+            const el = document.getElementById('global-stars');
+            if (el) {
+                el.innerText = `${this.getTotalStars()} Stars`;
+            }
+        }
+
+        init() {
+            this.updateTotalStarsDisplay();
+            this.render();
+        }
+
+        showDashboard() {
+            this.currentView = 'dashboard';
+            this.activeTopicId = null;
+            this.render();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        startTopic(topicId) {
+            this.currentView = 'game';
+            this.activeTopicId = topicId;
+            this.currentQuestionIndex = 0;
+            this.score = 0;
+            this.render();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        answerQuestion(selectedIndex, correctIndex) {
+            const topic = mathTopics.find(t => t.id === this.activeTopicId);
+            const feedbackEl = document.getElementById('question-feedback');
+            
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedIndex === correctIndex) {
+                this.score += 2;
+                feedbackEl.innerHTML = `
+                    <div class="bg-emerald-100 border-2 border-emerald-300 text-emerald-800 p-4 rounded-2xl flex items-center justify-center space-x-3 animate-pulse">
+                        <span class="text-2xl">🎉</span>
+                        <span class="font-bold text-lg">Correct! Great job! (+2 Stars)</span>
+                    </div>
+                `;
+                this.triggerConfetti();
+            } else {
+                feedbackEl.innerHTML = `
+                    <div class="bg-rose-100 border-2 border-rose-300 text-rose-800 p-4 rounded-2xl flex items-center justify-center space-x-3">
+                        <span class="text-2xl">💪</span>
+                        <span class="font-bold text-lg">Good try! Keep going!</span>
+                    </div>
+                `;
+            }
+
+            setTimeout(() => {
+                this.currentQuestionIndex++;
+                if (this.currentQuestionIndex < topic.questions.length) {
+                    this.renderGameView();
+                } else {
+                    this.finishTopicGame();
+                }
+            }, 1500);
+        }
+
+        finishTopicGame() {
+            const topicId = this.activeTopicId;
+            if (!this.progress[topicId]) {
+                this.progress[topicId] = { stars: 0, completed: false };
+            }
+            const earnedStars = this.score;
+            this.progress[topicId].stars = Math.max(this.progress[topicId].stars, earnedStars);
+            this.progress[topicId].completed = true;
+            this.saveState();
+
+            const modal = document.getElementById('reward-modal');
+            const title = document.getElementById('reward-title');
+            const desc = document.getElementById('reward-desc');
+            title.innerText = `Topic Completed! 🎉`;
+            desc.innerText = `Fantastic work! You earned ${earnedStars} shiny stars for your math trophy room!`;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        closeRewardModal() {
+            const modal = document.getElementById('reward-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                this.showDashboard();
+            }, 300);
+        }
+
+        triggerConfetti() {
+            const fx = document.getElementById('fx-container');
+            const star = document.createElement('div');
+            star.innerHTML = '⭐';
+            star.className = 'absolute text-3xl animate-bounce-slow transition-all duration-1000';
+            star.style.left = `${Math.random() * 80 + 10}%`;
+            star.style.top = `${Math.random() * 50 + 30}%`;
+            fx.appendChild(star);
+            setTimeout(() => star.remove(), 1200);
+        }
+
+        render() {
+            const container = document.getElementById('app-container');
+            if (this.currentView === 'dashboard') {
+                container.innerHTML = this.getDashboardHTML();
+            } else if (this.currentView === 'game') {
+                container.innerHTML = this.getGameHTML();
+            }
+        }
+
+        renderGameView() {
+            const wrapper = document.getElementById('game-dynamic-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = this.getGameInnerHTML();
+            }
+        }
+
+        getDashboardHTML() {
+            const totalStars = this.getTotalStars();
+            return `
+                <!-- Hero Banner -->
+                <div class="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 text-white p-8 sm:p-10 rounded-3xl shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 text-white/10 text-9xl pointer-events-none">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div class="max-w-2xl mb-6 sm:mb-0 z-10">
+                        <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-3 inline-block border border-white/20">
+                            Grade 1 Mathematics
+                        </span>
+                        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">Welcome to Math Star Adventures! 🚀</h1>
+                        <p class="text-amber-50 text-base leading-relaxed">Pick a fun math topic below, play interactive mini-games, and collect shiny star rewards!</p>
+                    </div>
+                    <div class="z-10 bg-white/20 backdrop-blur-md p-5 rounded-2xl border border-white/20 text-center min-w-[160px]">
+                        <span class="text-xs uppercase font-bold text-amber-100 block mb-1">Your Total Stars</span>
+                        <div class="flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-star text-yellow-200 text-2xl star-glow"></i>
+                            <span class="text-3xl font-extrabold">${totalStars}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topics Grid -->
+                <h2 class="text-2xl font-extrabold text-slate-800 mb-6 flex items-center">
+                    <i class="fa-solid fa-map-location-dot mr-3 text-amber-500"></i> Choose Your Math Adventure
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    ${mathTopics.map(topic => {
+                        const topicProgress = this.progress[topic.id] || { stars: 0, completed: false };
+                        return `
+                            <div onclick="app.startTopic('${topic.id}')" class="bg-white rounded-3xl border-2 border-slate-100 shadow-sm card-pop p-6 flex flex-col justify-between cursor-pointer group relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${topic.color} opacity-10 rounded-bl-full pointer-events-none group-hover:scale-110 transition"></div>
+                                <div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr ${topic.color} flex items-center justify-center text-white text-2xl shadow-md">
+                                            <i class="${topic.icon}"></i>
+                                        </div>
+                                        <span class="px-3 py-1.5 rounded-full text-xs font-bold border ${topic.badgeBg}">
+                                            ${topicProgress.completed ? '✓ Completed' : 'Ready to Play'}
+                                        </span>
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">${topic.subtitle}</span>
+                                    <h3 class="text-2xl font-extrabold text-slate-800 mt-1 mb-2 group-hover:text-orange-500 transition">${topic.title}</h3>
+                                    <p class="text-slate-600 text-sm mb-6">${topic.description}</p>
+                                </div>
+                                <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                                    <div class="flex items-center space-x-1.5 text-amber-500 font-bold text-sm">
+                                        <i class="fa-solid fa-star text-amber-400 star-glow"></i>
+                                        <span>${topicProgress.stars} Stars Earned</span>
+                                    </div>
+                                    <div class="px-5 py-2.5 rounded-2xl bg-amber-400 text-amber-950 font-bold text-sm shadow-sm group-hover:bg-amber-500 transition flex items-center space-x-2">
+                                        <span>Play Now</span>
+                                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <!-- GitHub Deployment Info Card -->
+                <div class="mt-12 bg-white rounded-3xl border-2 border-sky-100 p-8 shadow-sm">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                        <div>
+                            <div class="flex items-center space-x-3 mb-2">
+                                <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold">
+                                    <i class="fa-brands fa-github text-xl"></i>
+                                </div>
+                                <h3 class="text-xl font-extrabold text-slate-800">Hosting on GitHub Pages</h3>
+                            </div>
+                            <p class="text-slate-600 text-sm max-w-2xl leading-relaxed">
+                                This single-file app can be published directly to GitHub Pages in seconds! Simply create a repository, name this file <code class="bg-slate-100 text-sky-700 px-2 py-0.5 rounded font-mono font-bold">index.html</code>, and enable GitHub Pages in your repository settings.
+                            </p>
+                        </div>
+                        <button onclick="app.showPublishModal()" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-sm shadow-md transition flex items-center space-x-2 shrink-0">
+                            <i class="fa-solid fa-book-open"></i>
+                            <span>View Hosting Steps</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        showPublishModal() {
+            const modal = document.getElementById('reward-modal');
+            const title = document.getElementById('reward-title');
+            const desc = document.getElementById('reward-desc');
+            title.innerText = `GitHub Pages Setup 🚀`;
+            desc.innerHTML = `
+                <div class="text-left text-xs space-y-2 mt-2">
+                    <p><strong>1.</strong> Create a new repository on GitHub.</p>
+                    <p><strong>2.</strong> Upload this code as <code>index.html</code> in the main branch.</p>
+                    <p><strong>3.</strong> Go to repository <strong>Settings</strong> > <strong>Pages</strong>.</p>
+                    <p><strong>4.</strong> Select branch <code>main</code> / <code>root</code> and click Save!</p>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        getGameHTML() {
+            return `
+                <div id="game-dynamic-wrapper">
+                    ${this.getGameInnerHTML()}
+                </div>
+            `;
+        }
+
+        getGameInnerHTML() {
+            const topic = mathTopics.find(t => t.id === this.activeTopicId);
+            if (!topic) return '<div>Topic not found</div>';
+            
+            const q = topic.questions[this.currentQuestionIndex];
+            const totalQ = topic.questions.length;
+            const progressPercent = Math.round((this.currentQuestionIndex / totalQ) * 100);
+
+            let questionVisualHTML = '';
+            let optionsHTML = '';
+
+            if (q.type === 'count') {
+                let itemsStr = '';
+                for (let i = 0; i < q.target; i++) {
+                    itemsStr += `<span class="text-4xl animate-bounce-slow inline-block" style="animation-delay: ${i * 0.1}s">${q.emoji}</span>`;
+                }
+                questionVisualHTML = `
+                    <div class="text-xl font-bold text-slate-700 mb-4">${q.prompt}</div>
+                    <div class="bg-amber-50/70 border-2 border-dashed border-amber-300 rounded-3xl p-6 mb-6 flex flex-wrap items-center justify-center gap-4 min-h-[120px]">
+                        ${itemsStr}
+                    </div>
+                `;
+
+                let opts = [q.target, q.target + 1 > 15 ? 15 : q.target + 1, q.target - 1 < 1 ? q.target + 2 : q.target - 1];
+                opts = [...new Set(opts)].sort(() => Math.random() - 0.5);
+                const correctIdx = opts.indexOf(q.target);
+
+                optionsHTML = `
+                    <div class="grid grid-cols-3 gap-4">
+                        ${opts.map((opt, idx) => `
+                            <button onclick="app.answerQuestion(${idx},${correctIdx})" class="option-btn py-4 bg-white border-2 border-slate-200 hover:border-amber-400 text-slate-800 font-extrabold text-2xl rounded-2xl shadow-sm hover:shadow-md transition transform active:scale-95">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (q.type === 'equation' || q.type === 'sub_eq') {
+                const isAdd = q.type === 'equation';
+                const answerVal = isAdd ? (q.a + q.b) : (q.a - q.b);
+                
+                let aItems = '';
+                for(let i = 0; i < q.a; i++) aItems += `<span class="text-3xl">${q.emoji || '⚪'}</span>`;
+                let bItems = '';
+                for(let i = 0; i < q.b; i++) bItems += `<span class="text-3xl">${q.emoji || '⚪'}</span>`;
+
+                questionVisualHTML = `
+                    <div class="text-2xl font-bold text-slate-800 mb-2">${q.prompt}</div>
+                    <p class="text-xs text-slate-400 mb-4">Count or calculate the total amount!</p>
+                    <div class="bg-emerald-50/70 border-2 border-dashed border-emerald-300 rounded-3xl p-6 mb-6 flex items-center justify-center space-x-4 min-h-[100px]">
+                        <div class="flex flex-wrap gap-1 justify-center">${aItems}</div>
+                        <span class="text-2xl font-black text-emerald-600">${isAdd ? '+' : '-'}</span>
+                        <div class="flex flex-wrap gap-1 justify-center">${bItems}</div>
+                    </div>
+                `;
+
+                let opts = [answerVal, answerVal + 1, answerVal - 1 < 0 ? answerVal + 2 : answerVal - 1];
+                opts = [...new Set(opts)].sort(() => Math.random() - 0.5);
+                const correctIdx = opts.indexOf(answerVal);
+
+                optionsHTML = `
+                    <div class="grid grid-cols-3 gap-4">
+                        ${opts.map((opt, idx) => `
+                            <button onclick="app.answerQuestion(${idx},${correctIdx})" class="option-btn py-4 bg-white border-2 border-slate-200 hover:border-emerald-400 text-slate-800 font-extrabold text-2xl rounded-2xl shadow-sm hover:shadow-md transition transform active:scale-95">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                questionVisualHTML = `
+                    <div class="text-2xl font-extrabold text-slate-800 mb-6 text-center">${q.q}</div>
+                `;
+                optionsHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        ${q.options.map((opt, idx) => `
+                            <button onclick="app.answerQuestion(${idx},${q.answer})" class="option-btn py-4 px-6 bg-white border-2 border-slate-200 hover:border-amber-400 text-slate-800 font-bold text-lg rounded-2xl shadow-sm hover:shadow-md transition transform active:scale-95 text-center">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="mb-6 flex items-center justify-between">
+                    <button onclick="app.showDashboard()" class="inline-flex items-center text-sm font-bold text-slate-600 hover:text-amber-600 transition bg-white border border-slate-200 px-4 py-2 rounded-2xl shadow-sm">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Exit Activity
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xs font-bold px-3 py-1.5 rounded-full border ${topic.badgeBg}">${topic.title}</span>
+                        <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">Question ${this.currentQuestionIndex + 1} of ${totalQ}</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-white/80 border border-slate-200 h-4 rounded-full overflow-hidden p-0.5 mb-8 shadow-inner">
+                    <div class="bg-gradient-to-r from-amber-400 to-orange-500 h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+                </div>
+
+                <!-- Game Question Card -->
+                <div class="bg-white rounded-3xl border-2 border-slate-100 shadow-lg p-6 sm:p-10 max-w-2xl mx-auto text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr ${topic.color} flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-md">
+                        <i class="${topic.icon}"></i>
+                    </div>
+                    ${questionVisualHTML}
+                    <div id="question-feedback" class="mb-6"></div>
+                    ${optionsHTML}
+                </div>
+            `;
+        }
+    }
+
+    // Initialize application instance
+    const app = new MathApp();
+    </script>
+</body>
+</html>
